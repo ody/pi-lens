@@ -2477,7 +2477,9 @@ export function renderWidget(
 	},
 	// #3959: one-line summary switch (ui.compactWidget / --lens-compact-widget).
 	// An options object instead of a boolean flag parameter, per no-flag-argument.
-	opts?: { compact?: boolean },
+	// `hideWhenClear` (widget.hideWhenClear): draw nothing while no error,
+	// warning or unchecked file is outstanding.
+	opts?: { compact?: boolean; hideWhenClear?: boolean },
 ): string[] {
 	const dim = (s: string) => theme.fg("dim", s);
 	const red = (s: string) => theme.fg("error", s);
@@ -2506,6 +2508,14 @@ export function renderWidget(
 	const langStr = sessionLanguages.slice(0, 6).join(" ");
 	const uncheckedFiles = records.filter(isUncheckedClean);
 	const summaryFacts = summarizeWidget(records, renderable, uncheckedFiles);
+	if (
+		opts?.hideWhenClear &&
+		summaryFacts.totalErrors === 0 &&
+		summaryFacts.totalWarnings === 0 &&
+		summaryFacts.uncheckedCount === 0
+	) {
+		return [];
+	}
 	const errorChunk =
 		summaryFacts.totalErrors > 0
 			? (summaryFacts.totalBlocking > 0 ? red : yellow)(

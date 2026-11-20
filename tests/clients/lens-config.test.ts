@@ -859,6 +859,29 @@ describe("global pi-lens config", () => {
 			expect(warnedFor("widget.visible")).toBe(false);
 		});
 
+		it("parses widget.position and widget.hideWhenClear, and drops invalid values", () => {
+			const home = makeTempHome();
+			const okPath = writeConfig(
+				home,
+				JSON.stringify({
+					widget: { position: "aboveEditor", hideWhenClear: true },
+				}),
+			);
+			expect(loadPiLensGlobalConfig(okPath)?.widget).toMatchObject({
+				position: "aboveEditor",
+				hideWhenClear: true,
+			});
+			const badPath = writeConfig(
+				makeTempHome(),
+				JSON.stringify({ widget: { position: "left", hideWhenClear: 1 } }),
+			);
+			const widget = loadPiLensGlobalConfig(badPath)?.widget;
+			expect(widget?.position).toBeUndefined();
+			expect(widget?.hideWhenClear).toBeUndefined();
+			expect(warnedFor("widget.position must be")).toBe(true);
+			expect(warnedFor("widget.hideWhenClear must be")).toBe(true);
+		});
+
 		it("warns once on a present-but-invalid format.mode; absent stays silent", () => {
 			const home = makeTempHome();
 			const badPath = writeConfig(

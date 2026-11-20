@@ -1467,8 +1467,12 @@ function activateExtension(hostPi: ExtensionAPI) {
 	type LensWidgetSetWidget = (
 		id: string,
 		widget: LensWidgetFactory | undefined,
-		options?: { placement: "belowEditor" },
+		options?: { placement: "aboveEditor" | "belowEditor" },
 	) => void;
+	// widget.position / widget.hideWhenClear (global config only).
+	const widgetPlacement: "aboveEditor" | "belowEditor" =
+		globalConfig?.widget?.position ?? "belowEditor";
+	const widgetHideWhenClear = globalConfig?.widget?.hideWhenClear === true;
 
 	/**
 	 * #1334 S2: the widget is a terminal-only custom component. The host's own
@@ -1511,7 +1515,10 @@ function activateExtension(hostPi: ExtensionAPI) {
 				return {
 					render: (width: number) => {
 						scheduleStaleReconcile();
-						return renderWidget(width, theme, { compact: compactWidget });
+						return renderWidget(width, theme, {
+							compact: compactWidget,
+							hideWhenClear: widgetHideWhenClear,
+						});
 					},
 					invalidate: () => {
 						renderInvalidator = undefined;
@@ -1519,7 +1526,7 @@ function activateExtension(hostPi: ExtensionAPI) {
 					},
 				};
 			},
-			{ placement: "belowEditor" },
+			{ placement: widgetPlacement },
 		);
 		mountedLensWidgetUi = ui;
 		return true;
@@ -1586,7 +1593,7 @@ function activateExtension(hostPi: ExtensionAPI) {
 
 	pi.registerCommand("lens-widget-toggle", {
 		description:
-			"Show or hide the pi-lens diagnostics widget below the editor. Usage: /lens-widget-toggle",
+			"Show or hide the pi-lens diagnostics widget. Usage: /lens-widget-toggle",
 		handler: async (_args, ctx) => {
 			const nextVisible = !lensWidgetVisible;
 			const mode = readExtensionMode(ctx);

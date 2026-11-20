@@ -2890,6 +2890,25 @@ describe("past-EOF diagnostic gate (#1641)", () => {
 	});
 });
 
+describe("renderWidget hideWhenClear", () => {
+	it("draws nothing when only clean files remain, and draws once a warning lands", () => {
+		const filePath = `${process.cwd()}/hide-clear.ts`;
+		setSessionLanguages(["jsts"]);
+		recordRunner(filePath, "type-safety", "succeeded", 0);
+		recordDiagnostics(filePath, []);
+
+		expect(renderWidget(120, theme).length).toBeGreaterThan(0);
+		expect(renderWidget(120, theme, { hideWhenClear: true })).toEqual([]);
+
+		recordDiagnostics(filePath, [
+			{ severity: "warning", message: "w", line: 1, rule: "r" },
+		]);
+		expect(
+			renderWidget(120, theme, { hideWhenClear: true }).length,
+		).toBeGreaterThan(0);
+	});
+});
+
 // #3959: opt-in one-line widget summary (ui.compactWidget / --lens-compact-widget).
 describe("renderWidget compact summary (#3959)", () => {
 	const summaryFixture = () => {
